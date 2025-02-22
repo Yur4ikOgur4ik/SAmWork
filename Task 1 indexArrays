@@ -1,0 +1,432 @@
+#include <iostream>
+#include <string>
+
+
+using namespace std;
+
+int const maxSize = 15;//making maxSize for convenience
+int currentSize = 0;//making curSize 
+
+
+
+struct Mountain { //Структура гора, с атрибутами название, высота, страна, горный массив, сложность восхождения
+	string mountName;
+	int mountHeight;
+	string country;
+	string mountRange;
+	int difficulty;
+	string rockType;
+};
+
+struct nameIndex {
+	string name;
+	int indexForNames;
+};
+
+struct heightIndex {
+	int height;
+	int indexForHeight;
+};
+
+nameIndex indexArrNames[maxSize];//making index array for names
+heightIndex indexArrHeights[maxSize];//making the same for height
+
+
+// this thingy is needed for good excecution like without it sometimes everything breaks cuz of ordering of functions
+void DisplayMenu();
+void loadDefaultData();
+void addMountain();
+void PrintDefault(const Mountain& mount);
+void PrintIndexArray(const Mountain mountains[], const heightIndex Index[]);
+void PrintIndexArray(const Mountain mountains[], const nameIndex Index[]); // Перегрузка
+void MakeIndexStringArrayAndSort(const Mountain mountains[], nameIndex indexArray[], int size, string Mountain::* member);
+void MakeIndexIntArrayAndSort(const Mountain mountains[], heightIndex indexArray[], int size, int Mountain::* member);
+int BinaryIterativeSearchName(nameIndex arr[], const string& nameToSearch);
+
+
+
+Mountain* mountains = new Mountain[maxSize];	
+//peregruz operatora for comparing, so every thingy is different
+bool operator==(const Mountain& lhs, const Mountain& rhs) {//lhs (left-hand side) и rhs (right-hand side) - 2 objects i compare
+	return (lhs.mountName == rhs.mountName ||
+		lhs.mountHeight == rhs.mountHeight);
+}
+
+
+void loadDefaultData() {
+	if (currentSize < 7) {
+		currentSize = 7;
+	}
+	
+	mountains[0] = { "Everest",     8848, "Nepal",      "Himalayas",           10, "Metamorphic" };
+	mountains[1] = { "K2",          8611, "Pakistan",   "Karakoram",           10, "Sedimentary" };
+	mountains[2] = { "Mont Blanc",  4807, "France",     "Alps",                 6, "Metamorphic" };
+	mountains[3] = { "Aconcagua",   6962, "Argentina",  "Andes",                7, "Igneous" };
+	mountains[4] = { "Kilimanjaro", 5895, "Tanzania",   "East African Rift",    4, "Volcanic" };
+	mountains[5] = { "Elbrus",      5642, "Russia",     "Caucasus",             6, "Metamorphic" };
+	mountains[6] = { "Lenin Peak",  7134, "Tajikistan", "Pamirs",               8, "Metamorphic" };
+	
+	
+};
+
+void addMountain() {
+	if (currentSize >= maxSize) {
+		cout << "Error: Array is full. Cannot add more mountains." << endl;
+
+	}
+	Mountain m;
+	bool isNotSame = false;
+	do {
+		isNotSame = false;
+
+		cout << "\nEnter mountain name (1 word pls): ";
+		
+		cin >> m.mountName;
+
+		cout << "\nEnter mountain height: ";
+		
+		cin >> m.mountHeight;
+
+
+		cout << "\nEnter country (1 word again): ";
+		
+		cin >> m.country;
+
+		cout << "\nEnter mountain range (1 word pls >w<): ";
+		
+		cin >> m.mountRange;
+
+		cout << "\nEnter difficulty (1-10): ";
+		
+		cin >> m.difficulty;
+
+		cout << "\nEnter rock type";
+		cin >> m.rockType;
+
+		for (int i = 0; i < currentSize;i++) {
+			if (mountains[i] == m)
+				isNotSame = true;
+		};
+		if (isNotSame)
+			cout << "\nElement you entered contains the same key attribute(name or height), so pls enter them one more time";
+		
+	} while (isNotSame);
+	
+	
+	mountains[currentSize] = m;
+	cout << "Mountain added successfully!" << endl;
+
+
+	currentSize++; // Увеличиваем размер массива
+
+};
+
+void PrintDefault(const Mountain& mount) {
+	cout << "\nName - " << mount.mountName;
+	cout << "\nHeight - " << mount.mountHeight;
+	cout << "\nCountry - " << mount.country;
+	cout << "\nMountain range - " << mount.mountRange;
+	cout << "\nDifficulty - " << mount.difficulty;
+	cout << "\nRock Type - " << mount.rockType;
+	cout << "\n-------------------------------------------------";
+};
+
+void PrintIndexArray(const Mountain mountains[], const heightIndex Index[]) {
+
+	for (int i = 0;i < currentSize;i++) {
+		PrintDefault(mountains[Index[i].indexForHeight]);
+	}
+};
+
+void PrintIndexArray(const Mountain mountains[], const nameIndex Index[]) {//Перегрузка потому что я так могу B)
+
+	for (int i = 0;i < currentSize;i++) {
+		PrintDefault(mountains[Index[i].indexForNames]);
+	}
+
+};
+
+
+
+void MakeIndexStringArrayAndSort(const Mountain mountains[], nameIndex indexArray[], int size, string Mountain::* member) {
+
+	for (int i = 0; i < size; i++) {
+		indexArray[i].name = mountains[i].*member;
+		indexArray[i].indexForNames = i;
+
+	}
+	for (int i = 1; i < size; i++) {
+		nameIndex temp = indexArray[i];
+		int j = i - 1;
+		while (j >= 0 && indexArray[j].name > temp.name) {
+			indexArray[j + 1] = indexArray[j];
+			j--;
+		}
+		indexArray[j + 1] = temp;
+	}
+
+}
+
+
+void MakeIndexIntArrayAndSort(const Mountain mountains[], heightIndex indexArray[], int size, int Mountain::* member) {
+	// Копируем значения выбранного поля в индексный массив
+	for (int i = 0; i < size; i++) {
+		indexArray[i].height = mountains[i].*member;
+		indexArray[i].indexForHeight = i;
+	}
+	// Сортировка методом вставок
+	for (int i = 1; i < size; i++) {
+		heightIndex temp = indexArray[i];
+		int j = i - 1;
+		
+		while (j >= 0 && indexArray[j].height  < temp.height) {
+			indexArray[j + 1] = indexArray[j];
+			j--;
+		}
+		
+		
+		indexArray[j + 1] = temp;
+	}
+}
+
+
+int BinaryIterativeSearchName(nameIndex arr[], const string& nameToSearch) {
+	int l = 0; //left border
+	int r = currentSize;//right border
+	int m; //middle
+	while (l < r - 1) { //while didnt reach middle
+		m = (l + (r - l)) / 2;//not to come out of bounds
+		if (arr[m].name == nameToSearch)
+			return arr[m].indexForNames;
+		else if (arr[m].name < nameToSearch)
+			l = m + 1;//+1 cuz middle is not target
+		else
+			r = m;// not to skip middle elem
+	}
+	return -1;//elem not found
+}
+
+void DisplayMenu() {
+	cout << "\n1. Make a standart array of elemets (this will overwrite first 7 mountains)\n";
+	cout << "2. Enter new element from keyboard\n";
+	cout << "3. Delete element (by entering its height (recursive search))\n";
+	cout << "4. Print default array\n";
+	cout << "5. Print array, using index array for names(names alphabetically)\n";
+	cout << "6. Print array, using index array for heights (from tallest mountain to shortest)\n";
+	cout << "7. Iterative search(name)\n";
+	cout << "8. Edit existing element(search and edit height)\n";
+	cout << "9. Exit\n";
+};
+
+void updateIndexArrays() {
+	MakeIndexStringArrayAndSort(mountains, indexArrNames, currentSize, &Mountain::mountName);
+	MakeIndexIntArrayAndSort(mountains, indexArrHeights, currentSize, &Mountain::mountHeight);
+}
+
+int RecursiveBinarySearch(const heightIndex indexArray[], const Mountain mountains[], int left, int right, int heightToSearch) {
+
+
+	if (left > right)
+		return -1;
+		
+	int mid = left + (right - left) / 2;
+
+	if (mountains[indexArray[mid].indexForHeight].mountHeight == heightToSearch) {
+		return indexArray[mid].indexForHeight;
+	}
+
+	else if (mountains[indexArray[mid].indexForHeight].mountHeight > heightToSearch) {
+		return RecursiveBinarySearch(indexArray, mountains, mid + 1, right, heightToSearch);
+	}
+	else {
+		return RecursiveBinarySearch(indexArray, mountains, left, mid - 1, heightToSearch); 
+	}
+}
+
+
+void deleteMountainByHeight(int heightToDelete) {
+	if (currentSize == 0) {
+		cout << "\nArray is empty. Nothing to delete." << endl;
+		return;
+	}
+
+	updateIndexArrays();
+	int indexToDelete = RecursiveBinarySearch(indexArrHeights, mountains, 0, currentSize - 1, heightToDelete);
+	if (indexToDelete == -1) {
+		cout << "\nMountain not found" << endl;
+		return;
+	}
+
+	//Udalayu elementus
+	for (int i = indexToDelete; i < currentSize - 1; i++) {
+		mountains[i] = mountains[i + 1]; // Сдвигаем элементы влево
+	}
+
+	//obnovlyau dlinu UwU
+	currentSize--;
+	cout << "Mountain deleted successfully" << endl;
+
+	//updaitiruyu massivi vivi
+	updateIndexArrays();
+}
+
+
+void EditMountain() {
+	if (currentSize == 0) {//pochemy gde to est proverki a gde to net, ya ne znayu pisal kak po kaify(kogda vspominal, togda delal)
+		cout << "\nArray is empty. Nothing to edit." << endl;
+		return;
+	}
+
+	bool isUnique = true;
+
+	updateIndexArrays();//just to make sure evrth is alright
+
+	cout << "Enter the name of the mountain to edit: ";
+	string nameToEdit;
+	cin.ignore(); 
+	getline(cin, nameToEdit);// ya posmotrel, tak mojno vvodit' >1 clova
+
+	//searching da name 
+	int indexToEdit = BinaryIterativeSearchName(indexArrNames, nameToEdit);
+	if (indexToEdit == -1) {
+		cout << "\nMountain not found" << endl;
+		return;
+	}
+
+
+	//thingies to edit 
+	cout << "\nCurrent data for the mountain:" << endl;
+	PrintDefault(mountains[indexToEdit]);
+
+	//Editing stuff
+	cout << "\nEnter new data for the mountain (leave blank to keep current value):" << endl;
+
+	cout << "New name (current: " << mountains[indexToEdit].mountName << "): ";
+	string newName;
+	getline(cin, newName);
+	string newnewName;
+	if (newName.empty())
+		newnewName = mountains[indexToEdit].mountName;
+	else
+		newnewName = newName;
+	
+
+	cout << "New height (current: " << mountains[indexToEdit].mountHeight << "): ";
+	string newHeightStr;
+	getline(cin, newHeightStr);//readstr from keyboard
+	int newnewHeight;
+
+	if (newHeightStr.empty())
+		newnewHeight = mountains[indexToEdit].mountHeight;
+	else
+		newnewHeight = stoi(newHeightStr);
+	
+
+	Mountain newM = {newnewName, newnewHeight, mountains[indexToEdit].country, mountains[indexToEdit].mountRange, mountains[indexToEdit].difficulty, mountains[indexToEdit].rockType};
+	for (int i = 0; i < currentSize;i++) {//proverka na unique new elementa ya hochu spat
+		if (i == indexToEdit)
+			i++;
+		if (newM == mountains[i]) {
+			isUnique = false;
+		}
+	}
+
+
+	if (isUnique) {
+		if (!newHeightStr.empty()) {//checks if empty
+			mountains[indexToEdit].mountHeight = stoi(newHeightStr);//if not empty converts to int and makes new value
+		}
+
+
+		if (!newName.empty()) {
+			mountains[indexToEdit].mountName = newName;
+		}
+
+
+		cout << "\nMountain edited successfully!" << endl;
+
+		//Updatiruyu chtobi bilo po kaify
+		updateIndexArrays();
+	}
+	else
+		cout<<"\nA mountain with the same name or height already exists. Please enter unique values." << endl;
+	
+}
+
+
+int main() {
+	setlocale(LC_ALL, "RU");
+	string nameToSearch;
+	int deleteh;
+	int index;
+	bool isExit = true;
+
+	
+
+
+	
+	while (isExit) {
+		
+		DisplayMenu();
+		cout << "\nEnter desired action\n";
+		int choice;
+		cin >> choice;
+		switch (choice)
+		{
+		case 1:
+			loadDefaultData();
+			
+			break;
+		case 2:
+			addMountain();
+
+			break;
+		case 3:
+			
+			cout << "Enter height of mountain to delete: ";
+			cin >> deleteh;
+			deleteMountainByHeight(deleteh);
+			break;
+		case 4:
+
+			for (int i = 0;i < currentSize;i++) {
+				PrintDefault(mountains[i]);
+			}
+			break;
+		case 5:
+			MakeIndexStringArrayAndSort(mountains, indexArrNames, currentSize, &Mountain::mountName);
+			PrintIndexArray(mountains, indexArrNames);
+			break;
+		case 6:
+			MakeIndexIntArrayAndSort(mountains, indexArrHeights, currentSize, &Mountain::mountHeight);
+			PrintIndexArray(mountains, indexArrHeights);
+			break;
+		case 7:
+			
+			cout << "Enter a name to search: ";
+			cin.ignore(); // Clear any leftover characters from the input buffer
+			getline(cin, nameToSearch); // Use getline to handle multi-word names
+			index = BinaryIterativeSearchName(indexArrNames, nameToSearch);
+			if (index < 0)
+				cout << "Name not found";
+			else
+				PrintDefault(mountains[index]);
+			
+			break;
+		case 8:
+			EditMountain();
+			break;
+		case 9:
+			isExit = false;
+			break;
+		default:
+
+			break;
+		}
+
+	};
+	
+};
+
+
+
