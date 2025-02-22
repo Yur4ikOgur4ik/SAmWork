@@ -54,9 +54,7 @@ bool operator==(const Mountain& lhs, const Mountain& rhs) {//lhs (left-hand side
 
 
 void loadDefaultData() {
-	if (currentSize < 7) {
-		currentSize = 7;
-	}
+	
 	
 	mountains[0] = { "Everest",     8848, "Nepal",      "Himalayas",           10, "Metamorphic" };
 	mountains[1] = { "K2",          8611, "Pakistan",   "Karakoram",           10, "Sedimentary" };
@@ -65,7 +63,7 @@ void loadDefaultData() {
 	mountains[4] = { "Kilimanjaro", 5895, "Tanzania",   "East African Rift",    4, "Volcanic" };
 	mountains[5] = { "Elbrus",      5642, "Russia",     "Caucasus",             6, "Metamorphic" };
 	mountains[6] = { "Lenin Peak",  7134, "Tajikistan", "Pamirs",               8, "Metamorphic" };
-	
+	currentSize = 7;
 	
 };
 
@@ -207,23 +205,22 @@ int BinaryIterativeSearchName(nameIndex arr[], const string& nameToSearch) {
 }
 
 void DisplayMenu() {
-	cout << "\n1. Make a standart array of elemets (this will overwrite first 7 mountains)\n";
-	cout << "2. Enter new element from keyboard\n";
-	cout << "3. Delete element (by entering its height (recursive search))\n";
-	cout << "4. Print default array\n";
-	cout << "5. Print array, using index array for names(names alphabetically)\n";
-	cout << "6. Print array, using index array for heights (from tallest mountain to shortest)\n";
-	cout << "7. Iterative search(name)\n";
-	cout << "8. Edit existing element(search and edit height)\n";
-	cout << "9. Exit\n";
-};
+	cout << "\n1. Enter new element from keyboard\n";
+	cout << "2. Delete element (by entering its height (recursive search))\n";
+	cout << "3. Print default array\n";
+	cout << "4. Print array, using index array for names (names alphabetically)\n";
+	cout << "5. Print array, using index array for heights (from tallest mountain to shortest)\n";
+	cout << "6. Iterative search (name)\n";
+	cout << "7. Edit existing element (search by name)\n";
+	cout << "8. Exit\n";
+}
 
-void updateIndexArrays() {
+void updateIndexArrays() {//just to write less when updating
 	MakeIndexStringArrayAndSort(mountains, indexArrNames, currentSize, &Mountain::mountName);
 	MakeIndexIntArrayAndSort(mountains, indexArrHeights, currentSize, &Mountain::mountHeight);
 }
 
-int RecursiveBinarySearch(const heightIndex indexArray[], const Mountain mountains[], int left, int right, int heightToSearch) {
+int RecursiveBinarySearch(const heightIndex indexArray[], const Mountain mountains[], int left, int right, int heightToSearch) {//recursive binary search, but massiv otsortirovan ne tak kak nado a naoborot
 
 
 	if (left > right)
@@ -235,7 +232,7 @@ int RecursiveBinarySearch(const heightIndex indexArray[], const Mountain mountai
 		return indexArray[mid].indexForHeight;
 	}
 
-	else if (mountains[indexArray[mid].indexForHeight].mountHeight > heightToSearch) {
+	else if (mountains[indexArray[mid].indexForHeight].mountHeight > heightToSearch) {//vot tut > a ne < stoit tk massiv tak sorted
 		return RecursiveBinarySearch(indexArray, mountains, mid + 1, right, heightToSearch);
 	}
 	else {
@@ -245,13 +242,13 @@ int RecursiveBinarySearch(const heightIndex indexArray[], const Mountain mountai
 
 
 void deleteMountainByHeight(int heightToDelete) {
-	if (currentSize == 0) {
+	if (currentSize == 0) {//proverka na 0 dliny na vsyakiy
 		cout << "\nArray is empty. Nothing to delete." << endl;
 		return;
 	}
 
-	updateIndexArrays();
-	int indexToDelete = RecursiveBinarySearch(indexArrHeights, mountains, 0, currentSize - 1, heightToDelete);
+	updateIndexArrays();//update na vsyakiy(kotoriy must have)
+	int indexToDelete = RecursiveBinarySearch(indexArrHeights, mountains, 0, currentSize - 1, heightToDelete);//finfing index to del
 	if (indexToDelete == -1) {
 		cout << "\nMountain not found" << endl;
 		return;
@@ -259,7 +256,7 @@ void deleteMountainByHeight(int heightToDelete) {
 
 	//Udalayu elementus
 	for (int i = indexToDelete; i < currentSize - 1; i++) {
-		mountains[i] = mountains[i + 1]; // Сдвигаем элементы влево
+		mountains[i] = mountains[i + 1]; 
 	}
 
 	//obnovlyau dlinu UwU
@@ -277,7 +274,7 @@ void EditMountain() {
 		return;
 	}
 
-	bool isUnique = true;
+	bool isUnique = true;//flag na proverku unique
 
 	updateIndexArrays();//just to make sure evrth is alright
 
@@ -315,7 +312,7 @@ void EditMountain() {
 	string newHeightStr;
 	getline(cin, newHeightStr);//readstr from keyboard
 	int newnewHeight;
-
+	//tam sverxy kostil, slava god that it works tbh
 	if (newHeightStr.empty())
 		newnewHeight = mountains[indexToEdit].mountHeight;
 	else
@@ -360,49 +357,45 @@ int main() {
 	int deleteh;
 	int index;
 	bool isExit = true;
-
+	loadDefaultData();
 	
 
 
 	
 	while (isExit) {
-		
 		DisplayMenu();
-		cout << "\nEnter desired action\n";
+		cout << "\nEnter desired action: ";
 		int choice;
 		cin >> choice;
-		switch (choice)
-		{
-		case 1:
-			loadDefaultData();
-			
-			break;
-		case 2:
-			addMountain();
 
+		switch (choice) {
+		case 1:
+			addMountain();
 			break;
-		case 3:
-			
+
+		case 2:
 			cout << "Enter height of mountain to delete: ";
 			cin >> deleteh;
 			deleteMountainByHeight(deleteh);
 			break;
-		case 4:
 
-			for (int i = 0;i < currentSize;i++) {
+		case 3:
+			for (int i = 0; i < currentSize; i++) {
 				PrintDefault(mountains[i]);
 			}
 			break;
-		case 5:
+
+		case 4:
 			MakeIndexStringArrayAndSort(mountains, indexArrNames, currentSize, &Mountain::mountName);
 			PrintIndexArray(mountains, indexArrNames);
 			break;
-		case 6:
+
+		case 5:
 			MakeIndexIntArrayAndSort(mountains, indexArrHeights, currentSize, &Mountain::mountHeight);
 			PrintIndexArray(mountains, indexArrHeights);
 			break;
-		case 7:
-			
+
+		case 6:
 			cout << "Enter a name to search: ";
 			cin.ignore(); // Clear any leftover characters from the input buffer
 			getline(cin, nameToSearch); // Use getline to handle multi-word names
@@ -411,20 +404,21 @@ int main() {
 				cout << "Name not found";
 			else
 				PrintDefault(mountains[index]);
-			
 			break;
-		case 8:
+
+		case 7:
 			EditMountain();
 			break;
-		case 9:
+
+		case 8:
 			isExit = false;
 			break;
-		default:
 
+		default:
+			cout << "Invalid choice. Please try again." << endl;
 			break;
 		}
-
-	};
+	}
 	
 };
 
