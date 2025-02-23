@@ -42,7 +42,7 @@ void PrintIndexArray(const Mountain mountains[], const nameIndex Index[]); // П
 void MakeIndexStringArrayAndSort(const Mountain mountains[], nameIndex indexArray[], int size, string Mountain::* member);
 void MakeIndexIntArrayAndSort(const Mountain mountains[], heightIndex indexArray[], int size, int Mountain::* member);
 int BinaryIterativeSearchName(nameIndex arr[], const string& nameToSearch);
-
+void updateIndexArrays();
 
 
 Mountain* mountains = new Mountain[maxSize];	
@@ -189,6 +189,7 @@ void MakeIndexIntArrayAndSort(const Mountain mountains[], heightIndex indexArray
 
 
 int BinaryIterativeSearchName(nameIndex arr[], const string& nameToSearch) {
+	updateIndexArrays();
 	int l = 0; //left border
 	int r = currentSize;//right border
 	int m; //middle
